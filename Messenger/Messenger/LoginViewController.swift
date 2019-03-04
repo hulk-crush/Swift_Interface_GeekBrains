@@ -2,38 +2,98 @@
 //  LoginViewController.swift
 //  Messenger
 //
-//  Created by Admin on 01/03/2019.
+//  Created by Admin on 04/03/2019.
 //  Copyright © 2019 Admin. All rights reserved.
 //
 
+
 import UIKit
-
-class LoginViewController: UIViewController {
-
-    @IBOutlet weak var loginLabel: UILabel!
-    @IBOutlet weak var loginTextField: UITextField!
-    @IBOutlet weak var passwordLabel: UILabel!
-    @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var button: UIButton!
     
-    @IBAction func tapForLogIn(_ sender: UIButton) {
-        if let login = loginTextField.text, let password = passwordTextField.text {
-            if login == "admin" && password == "1234" {
-                print("Success")
-            } else if login.isEmpty || password.isEmpty {
-                print("Not all field full")
-            } else {
-                print("Failure!")
+    class LoginViewController: UIViewController {
+        
+        private let signInSegueId = "signInSegue"
+        
+        @IBOutlet weak var signInButton: UIButton!
+        @IBOutlet weak var scrollView: UIScrollView!
+        @IBOutlet weak var loginTextField: UITextField!
+        @IBOutlet weak var passwordTextField: UITextField!
+        
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            let hideKeyboardGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
+            scrollView.addGestureRecognizer(hideKeyboardGesture)
+        }
+        
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(keyboardWillShow),
+                name: UIResponder.keyboardWillShowNotification,
+                object: nil
+            )
+        }
+        
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(keyboardWillBeHidden),
+                name: UIResponder.keyboardWillHideNotification,
+                object: nil
+            )
+        }
+        
+        @IBAction func signIn(_ sender: Any) {
+            if let login = loginTextField.text,
+                let password = passwordTextField.text
+            {
+                if login == "admin" && password == "1234" {
+                    performSegue(withIdentifier: signInSegueId, sender: self)
+                } else if login.isEmpty || password.isEmpty {
+                    let alert = UIAlertController(title: "Ошибка", message: "Не все поля заполнены", preferredStyle: .alert)
+                    let action = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+                    alert.addAction(action)
+                    present(alert, animated: true, completion: nil)
+                }
+                else {
+                    let alert = UIAlertController(title: "Ошибка", message: "Введены неверные данные пользователя", preferredStyle: .alert)
+                    let action = UIAlertAction(title: "OK", style: .cancel, handler: nil)
+                    alert.addAction(action)
+                    present(alert, animated: true, completion: nil)
+                }
             }
         }
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
-
-    }
+        
+        override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        }
+        
+        @objc func hideKeyboard() {
+            self.scrollView?.endEditing(true)
+        }
+        
+        @objc func keyboardWillShow(notification: Notification) {
+            guard let keyboardFrameValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else {
+                return
+            }
+            let keyboardHeight = keyboardFrameValue.cgRectValue.height
+            let contentInsets = UIEdgeInsets(top: 0.0, left: 0.0, bottom: keyboardHeight, right: 0.0)
+            
+            scrollView?.contentInset = contentInsets
+            scrollView?.scrollIndicatorInsets = contentInsets
+        }
+        
+        @objc func keyboardWillBeHidden(notification: Notification) {
+            let contentInsets = UIEdgeInsets.zero
+            scrollView?.contentInset = contentInsets
+            scrollView?.scrollIndicatorInsets = contentInsets
+        }
+        
+        //unwindWithSegue
+        @IBAction func unwind(segue: UIStoryboardSegue) {
+            //Do nothing
+        }
 }
